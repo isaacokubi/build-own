@@ -1,0 +1,4 @@
+import axios from 'axios';
+const api=axios.create({baseURL:`${import.meta.env.VITE_API_URL||'http://localhost:5000/api'}/equipment`,withCredentials:true});
+api.interceptors.request.use(config=>{const token=localStorage.getItem('token');if(token)config.headers.Authorization=`Bearer ${token}`;return config});
+export const getEquipment=()=>api.get('/');export const createEquipment=data=>api.post('/',data);export const updateEquipment=(id,data)=>api.patch(`/${id}`,data);export const getMaintenance=()=>api.get('/maintenance');export const createMaintenance=data=>api.post('/maintenance',data);export const getFuelLogs=()=>api.get('/fuel');export const createFuelLog=data=>api.post('/fuel',data);export const getEquipmentAssignments=()=>api.get('/assignments');export const assignEquipment=data=>api.post('/assignments',data);
