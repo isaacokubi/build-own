@@ -1,0 +1,23 @@
+import Project from '../models/Project.js';
+import Client from '../models/Client.js';
+import Contract from '../models/Contract.js';
+import BOQ from '../models/BOQ.js';
+
+const scope=(req)=>req.user?.role==='SUPERADMIN'?{}:{tenantId:req.user.tenantId};
+const bodyTenant=(req)=>req.user?.role==='SUPERADMIN'?req.body.tenantId:req.user.tenantId;
+const ok=(res,data,status=200)=>res.status(status).json({success:true,data});
+export const listProjects=async(req,res,next)=>{try{ok(res,await Project.find({...scope(req),isDeleted:false}).populate('clientId','name email').sort({createdAt:-1}))}catch(e){next(e)}};
+export const createProject=async(req,res,next)=>{try{const {name,code}=req.body;if(!name||!code)return res.status(400).json({success:false,message:'Project name and code are required',code:'VALIDATION_ERROR'});ok(res,await Project.create({...req.body,tenantId:bodyTenant(req)}),201)}catch(e){next(e)}};
+export const getProject=async(req,res,next)=>{try{const p=await Project.findOne({_id:req.params.id,...scope(req),isDeleted:false}).populate('clientId','name email');if(!p)return res.status(404).json({success:false,message:'Project not found',code:'PROJECT_NOT_FOUND'});ok(res,p)}catch(e){next(e)}};
+export const updateProject=async(req,res,next)=>{try{const p=await Project.findOneAndUpdate({_id:req.params.id,...scope(req),isDeleted:false},{$set:req.body},{new:true,runValidators:true});if(!p)return res.status(404).json({success:false,message:'Project not found',code:'PROJECT_NOT_FOUND'});ok(res,p)}catch(e){next(e)}};
+export const deleteProject=async(req,res,next)=>{try{const p=await Project.findOneAndUpdate({_id:req.params.id,...scope(req),isDeleted:false},{$set:{isDeleted:true}},{new:true});if(!p)return res.status(404).json({success:false,message:'Project not found',code:'PROJECT_NOT_FOUND'});ok(res,p)}catch(e){next(e)}};
+export const listClients=async(req,res,next)=>{try{ok(res,await Client.find({...scope(req),isDeleted:false}).sort({name:1}))}catch(e){next(e)}};
+export const createClient=async(req,res,next)=>{try{if(!req.body.name)return res.status(400).json({success:false,message:'Client name is required',code:'VALIDATION_ERROR'});ok(res,await Client.create({...req.body,tenantId:bodyTenant(req)}),201)}catch(e){next(e)}};
+export const updateClient=async(req,res,next)=>{try{const c=await Client.findOneAndUpdate({_id:req.params.id,...scope(req),isDeleted:false},{$set:req.body},{new:true,runValidators:true});if(!c)return res.status(404).json({success:false,message:'Client not found',code:'CLIENT_NOT_FOUND'});ok(res,c)}catch(e){next(e)}};
+export const deleteClient=async(req,res,next)=>{try{const c=await Client.findOneAndUpdate({_id:req.params.id,...scope(req),isDeleted:false},{$set:{isDeleted:true}},{new:true});if(!c)return res.status(404).json({success:false,message:'Client not found',code:'CLIENT_NOT_FOUND'});ok(res,c)}catch(e){next(e)}};
+export const listContracts=async(req,res,next)=>{try{ok(res,await Contract.find(scope(req)).populate('projectId','name code').populate('clientId','name').sort({createdAt:-1}))}catch(e){next(e)}};
+export const createContract=async(req,res,next)=>{try{const {projectId,clientId,contractNumber,originalValue}=req.body;if(!projectId||!clientId||!contractNumber||originalValue===undefined)return res.status(400).json({success:false,message:'Project, client, contract number and value are required',code:'VALIDATION_ERROR'});ok(res,await Contract.create({...req.body,tenantId:bodyTenant(req)}),201)}catch(e){next(e)}};
+export const updateContract=async(req,res,next)=>{try{const c=await Contract.findOne({_id:req.params.id,...scope(req)});if(!c)return res.status(404).json({success:false,message:'Contract not found',code:'CONTRACT_NOT_FOUND'});Object.assign(c,req.body);await c.save();ok(res,c)}catch(e){next(e)}};
+export const listBOQ=async(req,res,next)=>{try{ok(res,await BOQ.find(scope(req)).populate('projectId','name code').sort({createdAt:-1}))}catch(e){next(e)}};
+export const createBOQ=async(req,res,next)=>{try{if(!req.body.projectId||!req.body.name)return res.status(400).json({success:false,message:'Project and BOQ name are required',code:'VALIDATION_ERROR'});ok(res,await BOQ.create({...req.body,tenantId:bodyTenant(req)}),201)}catch(e){next(e)}};
+export const updateBOQ=async(req,res,next)=>{try{const b=await BOQ.findOne({_id:req.params.id,...scope(req)});if(!b)return res.status(404).json({success:false,message:'BOQ not found',code:'BOQ_NOT_FOUND'});Object.assign(b,req.body);await b.save();ok(res,b)}catch(e){next(e)}};
