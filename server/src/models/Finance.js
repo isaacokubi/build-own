@@ -1,0 +1,4 @@
+import mongoose from 'mongoose';
+const financeSchema=new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,ref:'Tenant',required:true,index:true},project:{type:mongoose.Schema.Types.ObjectId,ref:'Project',index:true},type:{type:String,enum:['expense','invoice','payment'],required:true,index:true},reference:{type:String,trim:true},amount:{type:Number,min:0,required:true},currency:{type:String,default:'KES',uppercase:true},category:String,description:String,status:{type:String,enum:['draft','submitted','approved','rejected','issued','partially_paid','paid','overdue','cancelled','pending','failed'],default:'draft'},date:{type:Date,default:Date.now},createdBy:{type:mongoose.Schema.Types.ObjectId,ref:'User'},approvedBy:{type:mongoose.Schema.Types.ObjectId,ref:'User'},metadata:mongoose.Schema.Types.Mixed},{timestamps:true});
+financeSchema.index({tenantId:1,type:1,date:-1});
+export default mongoose.model('Finance',financeSchema);
