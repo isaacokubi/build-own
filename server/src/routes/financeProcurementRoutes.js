@@ -1,0 +1,6 @@
+import {Router} from 'express';import {requireAuth,requireRole} from '../middleware/auth.js';import {listExpenses,createExpense,updateExpense,approveExpense,listSuppliers,createSupplier,listPurchaseOrders,createPurchaseOrder,approvePurchaseOrder,listMaterials,createMaterial} from '../controllers/financeProcurementController.js';
+const r=Router();r.use(requireAuth);const managers=['SUPERADMIN','ADMIN','DIRECTOR'];const finance=[...managers,'ACCOUNTANT'];const procurement=[...managers,'PROCUREMENT_OFFICER'];
+r.get('/expenses',listExpenses);r.post('/expenses',requireRole(...finance),createExpense);r.patch('/expenses/:id',requireRole(...finance),updateExpense);r.patch('/expenses/:id/approval',requireRole(...finance),approveExpense);
+r.get('/suppliers',listSuppliers);r.post('/suppliers',requireRole(...procurement),createSupplier);
+r.get('/purchase-orders',listPurchaseOrders);r.post('/purchase-orders',requireRole(...procurement),createPurchaseOrder);r.patch('/purchase-orders/:id/approval',requireRole(...procurement),approvePurchaseOrder);
+r.get('/materials',listMaterials);r.post('/materials',requireRole(...procurement,'STOREKEEPER'),createMaterial);export default r;
