@@ -1,0 +1,2 @@
+export function requireTenant(req,res,next){const tenantId=req.user?.tenantId;if(!tenantId)return res.status(403).json({success:false,message:'Tenant context required',code:'TENANT_REQUIRED'});req.tenantId=String(tenantId);next()}
+export function requireTenantOrPlatform(req,res,next){if(req.user?.tenantId){req.tenantId=String(req.user.tenantId);return next()}if(['superadmin','SUPERADMIN'].includes(req.user?.role))return next();return res.status(403).json({success:false,message:'Tenant or platform authorization required',code:'TENANT_AUTH_REQUIRED'})}
