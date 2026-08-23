@@ -1,0 +1,3 @@
+const integer=(value,fallback,min,max)=>{const n=Number.parseInt(value,10);if(!Number.isFinite(n))return fallback;return Math.min(Math.max(n,min),max)};
+export function pagination(req,_res,next){req.pagination={page:integer(req.query.page,1,1,100000),limit:integer(req.query.limit,25,1,100)};req.pagination.skip=(req.pagination.page-1)*req.pagination.limit;next()}
+export function safeSort(req,_res,next){const allowed=(process.env.SORTABLE_FIELDS||'createdAt,updatedAt,name,status').split(',').map(v=>v.trim()).filter(Boolean);const requested=String(req.query.sort||'createdAt');const field=requested.replace(/^-/, '');req.sort={field:allowed.includes(field)?field:'createdAt',direction:requested.startsWith('-')?-1:1};next()}
