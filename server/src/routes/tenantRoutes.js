@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { listTenants, createTenant, updateTenant, updateTenantStatus, deleteTenant } from '../controllers/tenantController.js';
+const router = Router();
+router.use(authenticate, authorize('SUPERADMIN'));
+router.get('/', listTenants);
+router.post('/', createTenant);
+router.patch('/:id', updateTenant);
+router.patch('/:id/status', updateTenantStatus);
+router.delete('/:id', deleteTenant);
+export default router;
