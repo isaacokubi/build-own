@@ -1,0 +1,10 @@
+import {Router} from 'express';
+import {requireAuth,requireRole} from '../middleware/auth.js';
+import {listProjects,createProject,getProject,updateProject,deleteProject,listClients,createClient,updateClient,deleteClient,listContracts,createContract,updateContract,listBOQ,createBOQ,updateBOQ} from '../controllers/constructionCoreController.js';
+const r=Router();r.use(requireAuth);
+const managers=['SUPERADMIN','ADMIN','DIRECTOR','PROJECT_MANAGER'];
+r.get('/projects',listProjects);r.post('/projects',requireRole(...managers),createProject);r.get('/projects/:id',getProject);r.patch('/projects/:id',requireRole(...managers),updateProject);r.delete('/projects/:id',requireRole('SUPERADMIN','ADMIN','DIRECTOR'),deleteProject);
+r.get('/clients',listClients);r.post('/clients',requireRole(...managers),createClient);r.patch('/clients/:id',requireRole(...managers),updateClient);r.delete('/clients/:id',requireRole('SUPERADMIN','ADMIN','DIRECTOR'),deleteClient);
+r.get('/contracts',listContracts);r.post('/contracts',requireRole('SUPERADMIN','ADMIN','DIRECTOR','ACCOUNTANT'),createContract);r.patch('/contracts/:id',requireRole('SUPERADMIN','ADMIN','DIRECTOR','ACCOUNTANT'),updateContract);
+r.get('/boq',listBOQ);r.post('/boq',requireRole(...managers),createBOQ);r.patch('/boq/:id',requireRole(...managers),updateBOQ);
+export default r;
