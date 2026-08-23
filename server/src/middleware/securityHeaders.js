@@ -1,0 +1,2 @@
+export function validatePagination(req,res,next){const limit=Math.min(Math.max(Number.parseInt(req.query.limit,10)||25,1),100);const page=Math.max(Number.parseInt(req.query.page,10)||1,1);req.pagination={limit,page,skip:(page-1)*limit};next()}
+export function requireHttpsInProduction(req,res,next){if(process.env.NODE_ENV==='production'&&req.headers['x-forwarded-proto']==='http')return res.status(400).json({success:false,message:'HTTPS is required',code:'HTTPS_REQUIRED'});next()}
