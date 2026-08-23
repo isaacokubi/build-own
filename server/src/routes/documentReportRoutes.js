@@ -1,0 +1,1 @@
+import express from 'express';import {documents,createDocument,reports,createReport} from '../controllers/documentReportController.js';const r=express.Router();r.get('/documents',documents);r.post('/documents',createDocument);r.get('/reports',reports);r.post('/reports',createReport);export default r;
