@@ -1,0 +1,4 @@
+import mongoose from 'mongoose';
+const itemSchema=new mongoose.Schema({itemCode:String,description:{type:String,required:true},unit:{type:String,required:true},quantity:{type:Number,min:0,required:true},unitRate:{type:Number,min:0,required:true},category:String,section:String,notes:String,total:{type:Number,min:0,default:0}},{_id:true});
+const boqSchema=new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,ref:'Tenant',required:true,index:true},projectId:{type:mongoose.Schema.Types.ObjectId,ref:'Project',required:true,index:true},name:{type:String,required:true},items:[itemSchema],totalValue:{type:Number,min:0,default:0},status:{type:String,enum:['Draft','Approved','Revised'],default:'Draft'}},{timestamps:true});
+boqSchema.pre('save',function(next){this.items.forEach(i=>{i.total=(i.quantity||0)*(i.unitRate||0)});this.totalValue=this.items.reduce((sum,i)=>sum+i.total,0);next()});export default mongoose.model('BOQ',boqSchema);
