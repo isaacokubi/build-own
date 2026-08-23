@@ -1,0 +1,2 @@
+import express from 'express';import {listMaterials,createMaterial,listWarehouses,createWarehouse,listStock,recordMovement,inventorySummary} from '../controllers/inventoryController.js';
+const router=express.Router();router.get('/materials',listMaterials);router.post('/materials',createMaterial);router.get('/warehouses',listWarehouses);router.post('/warehouses',createWarehouse);router.get('/stock',listStock);router.get('/summary',inventorySummary);router.post('/movements',recordMovement);export default router;
