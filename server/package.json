@@ -2,7 +2,12 @@
   "name": "construction-api",
   "version": "0.1.0",
   "type": "module",
-  "scripts": {"dev": "node --watch src/server.js", "start": "node src/server.js", "lint": "node --check src/server.js", "test": "node --test"},
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "lint": "node --check src/server.js",
+    "test": "node --test"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
