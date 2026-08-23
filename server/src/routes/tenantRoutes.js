@@ -1,11 +1,2 @@
-import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth.js';
-import { listTenants, createTenant, updateTenant, updateTenantStatus, deleteTenant } from '../controllers/tenantController.js';
-const router = Router();
-router.use(authenticate, authorize('SUPERADMIN'));
-router.get('/', listTenants);
-router.post('/', createTenant);
-router.patch('/:id', updateTenant);
-router.patch('/:id/status', updateTenantStatus);
-router.delete('/:id', deleteTenant);
-export default router;
+import {Router} from 'express';import {authenticate,authorize} from '../middleware/auth.js';import {listTenants,createTenant,updateTenant,updateTenantStatus,deleteTenant} from '../controllers/tenantController.js';import {getMyTenant} from '../controllers/tenantWorkspaceController.js';
+const router=Router();router.use(authenticate);router.get('/me',authorize('ADMIN','DIRECTOR','PROJECT_MANAGER','SITE_MANAGER','ENGINEER','ARCHITECT','FOREMAN','ACCOUNTANT','PROCUREMENT_OFFICER','STOREKEEPER','HR_MANAGER','SAFETY_OFFICER','QUALITY_OFFICER','EMPLOYEE','CLIENT','CONTRACTOR','SUBCONTRACTOR','SUPPLIER'),getMyTenant);router.use(authorize('SUPERADMIN'));router.get('/',listTenants);router.post('/',createTenant);router.patch('/:id',updateTenant);router.patch('/:id/status',updateTenantStatus);router.delete('/:id',deleteTenant);export default router;
