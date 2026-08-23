@@ -5,6 +5,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
+import tenantRoutes from './routes/tenantRoutes.js';
 
 const app = express();
 const port = Number(process.env.PORT || 5000);
@@ -19,6 +20,7 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: true, legacyHeaders: false }));
 
 app.get('/api/health', (_req, res) => res.json({ success: true, service: 'construction-api', status: 'healthy', timestamp: new Date().toISOString() }));
+app.use('/api/tenants', tenantRoutes);
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Route not found', code: 'ROUTE_NOT_FOUND' }));
 app.use((err, _req, res, _next) => { console.error(err); res.status(err.status || 500).json({ success: false, message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message, code: err.code || 'INTERNAL_ERROR' }); });
 
