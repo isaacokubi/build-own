@@ -1,1 +1,23 @@
-import axios from 'axios';const api=axios.create({baseURL:`${import.meta.env.VITE_API_URL||'http://localhost:5000/api'}/safety-quality`,withCredentials:true});api.interceptors.request.use(c=>{const t=localStorage.getItem('token');if(t)c.headers.Authorization=`Bearer ${t}`;return c});export const getIncidents=()=>api.get('/incidents');export const createIncident=d=>api.post('/incidents',d);export const getInspections=()=>api.get('/inspections');export const createInspection=d=>api.post('/inspections',d);export const getQualityRecords=()=>api.get('/quality');export const createQualityRecord=d=>api.post('/quality',d);export const getCorrectiveActions=()=>api.get('/actions');export const createCorrectiveAction=d=>api.post('/actions',d);export const completeCorrectiveAction=id=>api.patch(`/actions/${id}/complete`);
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/safety-quality`,
+  withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export const getIncidents = () => api.get('/incidents');
+export const createIncident = (data) => api.post('/incidents', data);
+export const getInspections = () => api.get('/inspections');
+export const createInspection = (data) => api.post('/inspections', data);
+export const getQualityRecords = () => api.get('/quality');
+export const createQualityRecord = (data) => api.post('/quality', data);
+export const createQuality = createQualityRecord;
+export const getCorrectiveActions = () => api.get('/actions');
+export const createCorrectiveAction = (data) => api.post('/actions', data);
+export const completeCorrectiveAction = (id) => api.patch(`/actions/${id}/complete`);
