@@ -1,0 +1,1 @@
+import express from 'express';import {backupPolicy,recoveryChecklist,validateBackupConfig} from '../utils/backupPolicy.js';const r=express.Router();r.get('/policy',(_req,res)=>res.json({success:true,data:{...backupPolicy,...validateBackupConfig(),recoveryChecklist:recoveryChecklist()}}));export default r;
