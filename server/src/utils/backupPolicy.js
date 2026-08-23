@@ -1,0 +1,3 @@
+export const backupPolicy={frequency:process.env.BACKUP_FREQUENCY||'daily',retentionDays:Number(process.env.BACKUP_RETENTION_DAYS||30),provider:process.env.BACKUP_PROVIDER||'external'};
+export function validateBackupConfig(){if(process.env.NODE_ENV!=='production')return {configured:true,provider:backupPolicy.provider};const configured=Boolean(process.env.BACKUP_PROVIDER&&process.env.BACKUP_RETENTION_DAYS);return {configured,provider:backupPolicy.provider,retentionDays:backupPolicy.retentionDays}}
+export function recoveryChecklist(){return ['Verify latest backup timestamp','Verify backup integrity','Restore into isolated environment','Run database migrations','Run application health checks','Document recovery point and recovery time','Approve production cutover']}
