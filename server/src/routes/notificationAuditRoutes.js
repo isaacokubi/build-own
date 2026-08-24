@@ -1,1 +1,12 @@
-import express from 'express';import {notifications,createNotification,markRead,audits,createAudit} from '../controllers/notificationAuditController.js';const r=express.Router();r.get('/notifications',notifications);r.post('/notifications',createNotification);r.patch('/notifications/:id/read',markRead);r.get('/audit-logs',audits);r.post('/audit-logs',createAudit);export default r;
+import express from 'express';
+import {requireAuth} from '../middleware/auth.js';
+import {notifications,createNotification,markRead,audits,createAudit} from '../controllers/notificationAuditController.js';
+
+const r=express.Router();
+r.use(requireAuth);
+r.get('/notifications',notifications);
+r.post('/notifications',createNotification);
+r.patch('/notifications/:id/read',markRead);
+r.get('/audit-logs',audits);
+r.post('/audit-logs',createAudit);
+export default r;
