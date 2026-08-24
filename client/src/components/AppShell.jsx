@@ -25,6 +25,7 @@ function decodeRole(){
 export default function AppShell({children}){
   const [open,setOpen]=useState(false);
   const [workspace,setWorkspace]=useState(null);
+  const [tenantAccess,setTenantAccess]=useState(null);
   const [health,setHealth]=useState({status:'checking',database:'checking'});
   const [notifications,setNotifications]=useState([]);
   const [noticeOpen,setNoticeOpen]=useState(false);
@@ -37,9 +38,11 @@ export default function AppShell({children}){
 
   useEffect(()=>{
     let active=true;
-    if(authenticated)tenantApi.me().then(r=>{if(active)setWorkspace(r.data?.data||null)}).catch(()=>{});
+    if(authenticated)tenantApi.me().then(r=>{if(active){setWorkspace(r.data?.data||null);setTenantAccess(r.data?.access||null)}}).catch(()=>{});
+    else {setWorkspace(null);setTenantAccess(null)}
     api.get('/health').then(r=>{if(active)setHealth(r.data||{})}).catch(()=>{if(active)setHealth({status:'unavailable',database:'unavailable'})});
     if(authenticated)notificationApi.list().then(r=>{if(active)setNotifications(r.data?.data||[])}).catch(()=>{});
+    else setNotifications([]);
     return()=>{active=false};
   },[location.pathname,authenticated]);
 
@@ -61,7 +64,7 @@ export default function AppShell({children}){
     </aside>
     <div className="app-main">
       <header className="topbar"><div className="topbar-left"><button className="mobile-menu" aria-label="Open navigation" onClick={()=>setOpen(true)}>☰</button><div><span className="topbar-kicker">Construction Operations</span><strong>{workspaceName}</strong></div></div><div className="topbar-actions"><button className="notification-button" aria-label="Open notifications" onClick={()=>setNoticeOpen(value=>!value)}><span className="notification-bell">●</span>{unread>0&&<span className="notification-count">{unread>99?'99+':unread}</span>}</button><div className="role-chip"><span className="avatar">{roleLabel.slice(0,1).toUpperCase()}</span><span><strong>{roleLabel}</strong><small>{isSuperadmin?'Platform access':isAdmin?'Administrative access':'Workspace access'}</small></span></div></div>{noticeOpen&&<div className="notification-panel"><div className="notification-head"><strong>Notifications</strong><button onClick={()=>setNoticeOpen(false)}>×</button></div>{notifications.length?<div>{notifications.slice(0,8).map(item=><button className={`notification-item ${item.read?'read':''}`} key={item._id} onClick={()=>markRead(item)}><span className="notice-icon">{item.read?'✓':'!'}</span><div><strong>{item.title}</strong><p>{item.message}</p><small>{new Date(item.createdAt).toLocaleString()}</small></div></button>)}</div>:<div className="notification-empty">No notifications yet.</div>}</div>}</header>
-      <main className="route-content"><SubscriptionGate>{children}</SubscriptionGate></main>
+      <main className="route-content"><SubscriptionGate access={tenantAccess} workspace={workspace} authenticated={authenticated}>{children}</SubscriptionGate></main>
     </div>
   </div>;
 }
