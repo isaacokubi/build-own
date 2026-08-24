@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {NavLink,useLocation,useNavigate} from 'react-router-dom';
-import {tenantApi,default as api} from '../api';
+import {tenantApi,notificationApi,default as api} from '../api';
+import SubscriptionGate from './SubscriptionGate';
 
 const groups=[
   {label:'Workspace',items:[['Overview','/'],['Operations Hub','/operations']]},
@@ -25,6 +26,7 @@ export default function AppShell({children}){
   const [open,setOpen]=useState(false);
   const [workspace,setWorkspace]=useState(null);
   const [health,setHealth]=useState({status:'checking',database:'checking'});
+  const [notifications,setNotifications]=useState([]);
   const [noticeOpen,setNoticeOpen]=useState(false);
   const location=useLocation();
   const navigate=useNavigate();
@@ -37,6 +39,7 @@ export default function AppShell({children}){
     let active=true;
     if(authenticated)tenantApi.me().then(r=>{if(active)setWorkspace(r.data?.data||null)}).catch(()=>{});
     api.get('/health').then(r=>{if(active)setHealth(r.data||{})}).catch(()=>{if(active)setHealth({status:'unavailable',database:'unavailable'})});
+    if(authenticated)notificationApi.list().then(r=>{if(active)setNotifications(r.data?.data||[])}).catch(()=>{});
     return()=>{active=false};
   },[location.pathname,authenticated]);
 
@@ -44,7 +47,9 @@ export default function AppShell({children}){
   const workspaceName=workspace?.name||workspace?.tenant?.name||'Current Workspace';
   const roleLabel=role.replace(/[_-]/g,' ');
   const healthy=health.status==='healthy'&&health.database==='connected';
+  const unread=notifications.filter(item=>!item.read).length;
   const logout=()=>{localStorage.removeItem('accessToken');localStorage.removeItem('refreshToken');navigate('/');window.location.reload()};
+  const markRead=async item=>{if(item.read)return;try{await notificationApi.markRead(item._id);setNotifications(items=>items.map(x=>x._id===item._id?{...x,read:true,readAt:new Date().toISOString()}:x))}catch{}}
 
   return <div className="app-frame">
     {open&&<button className="mobile-scrim" aria-label="Close navigation" onClick={()=>setOpen(false)}/>} 
@@ -55,8 +60,8 @@ export default function AppShell({children}){
       <div className="sidebar-footer"><div className={`system-mini ${healthy?'healthy':'degraded'}`}><span className="status-dot"/><div><strong>{healthy?'System healthy':'Check system status'}</strong><small>API · {health.database||'unknown'}</small></div></div>{authenticated&&<button className="logout-button" onClick={logout}>Sign out</button>}</div>
     </aside>
     <div className="app-main">
-      <header className="topbar"><div className="topbar-left"><button className="mobile-menu" aria-label="Open navigation" onClick={()=>setOpen(true)}>☰</button><div><span className="topbar-kicker">Construction Operations</span><strong>{workspaceName}</strong></div></div><div className="topbar-actions"><button className="notification-button" aria-label="Open notifications" onClick={()=>setNoticeOpen(value=>!value)}><span className="notification-bell">●</span><span className="notification-count">1</span></button><div className="role-chip"><span className="avatar">{roleLabel.slice(0,1).toUpperCase()}</span><span><strong>{roleLabel}</strong><small>{isSuperadmin?'Platform access':isAdmin?'Administrative access':'Workspace access'}</small></span></div></div>{noticeOpen&&<div className="notification-panel"><div className="notification-head"><strong>Notifications</strong><button onClick={()=>setNoticeOpen(false)}>×</button></div><div className="notification-item"><span className="notice-icon success">✓</span><div><strong>System status</strong><p>{healthy?'API and database are healthy.':'The API health check needs attention.'}</p></div></div><div className="notification-item"><span className="notice-icon">i</span><div><strong>Tenant isolation</strong><p>Workspace routes remain scoped through the existing backend authorization layer.</p></div></div></div>}</header>
-      <main className="route-content">{children}</main>
+      <header className="topbar"><div className="topbar-left"><button className="mobile-menu" aria-label="Open navigation" onClick={()=>setOpen(true)}>☰</button><div><span className="topbar-kicker">Construction Operations</span><strong>{workspaceName}</strong></div></div><div className="topbar-actions"><button className="notification-button" aria-label="Open notifications" onClick={()=>setNoticeOpen(value=>!value)}><span className="notification-bell">●</span>{unread>0&&<span className="notification-count">{unread>99?'99+':unread}</span>}</button><div className="role-chip"><span className="avatar">{roleLabel.slice(0,1).toUpperCase()}</span><span><strong>{roleLabel}</strong><small>{isSuperadmin?'Platform access':isAdmin?'Administrative access':'Workspace access'}</small></span></div></div>{noticeOpen&&<div className="notification-panel"><div className="notification-head"><strong>Notifications</strong><button onClick={()=>setNoticeOpen(false)}>×</button></div>{notifications.length?<div>{notifications.slice(0,8).map(item=><button className={`notification-item ${item.read?'read':''}`} key={item._id} onClick={()=>markRead(item)}><span className="notice-icon">{item.read?'✓':'!'}</span><div><strong>{item.title}</strong><p>{item.message}</p><small>{new Date(item.createdAt).toLocaleString()}</small></div></button>)}</div>:<div className="notification-empty">No notifications yet.</div>}</div>}</header>
+      <main className="route-content"><SubscriptionGate>{children}</SubscriptionGate></main>
     </div>
   </div>;
 }
