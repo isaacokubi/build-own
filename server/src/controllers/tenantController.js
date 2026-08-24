@@ -1,5 +1,19 @@
 import Tenant from '../models/Tenant.js';
 
+function buildTrialSubscription(input = {}) {
+  if (input && Object.keys(input).length) return input;
+  const now = new Date();
+  const trialDays = Math.max(Number(process.env.TRIAL_DAYS || 14), 1);
+  const expiresAt = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
+  return {
+    plan: 'trial',
+    status: 'trialing',
+    startedAt: now,
+    trialEndsAt: expiresAt,
+    expiresAt,
+  };
+}
+
 export async function listTenants(req, res, next) {
   try {
     const page = Math.max(Number(req.query.page) || 1, 1);
@@ -15,7 +29,13 @@ export async function listTenants(req, res, next) {
 }
 
 export async function createTenant(req, res, next) {
-  try { const tenant = await Tenant.create(req.body); return res.status(201).json({ success: true, data: tenant }); } catch (e) { next(e); }
+  try {
+    const tenant = await Tenant.create({
+      ...req.body,
+      subscription: buildTrialSubscription(req.body?.subscription),
+    });
+    return res.status(201).json({ success: true, data: tenant });
+  } catch (e) { next(e); }
 }
 
 export async function updateTenant(req, res, next) {

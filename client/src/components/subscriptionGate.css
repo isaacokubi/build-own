@@ -1,0 +1,14 @@
+.subscription-lock{min-height:calc(100vh - 88px);display:grid;place-items:center;padding:48px 24px;background:radial-gradient(circle at 20% 10%,rgba(14,116,144,.12),transparent 34%),linear-gradient(135deg,#f8fafc,#eef2f7)}
+.subscription-lock-card{width:min(680px,100%);padding:48px;border:1px solid #dbe3ea;border-radius:28px;background:rgba(255,255,255,.96);box-shadow:0 24px 70px rgba(15,23,42,.12);text-align:center}
+.subscription-lock-icon{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 20px;border-radius:18px;background:#fff7ed;color:#c2410c;font-size:28px;font-weight:800}
+.subscription-lock-card h1{margin:10px 0 14px;color:#0f172a;font-size:clamp(2rem,5vw,3.2rem);line-height:1.05}
+.subscription-lock-lead{max-width:560px;margin:0 auto 24px;color:#475569;font-size:1.05rem;line-height:1.7}
+.subscription-lock-message{display:grid;gap:8px;padding:18px 20px;margin:0 auto 26px;border:1px solid #fed7aa;border-radius:16px;background:#fffaf4;color:#7c2d12;text-align:left}
+.subscription-lock-message small{color:#9a3412}
+.subscription-lock-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.subscription-lock-footer{margin:26px 0 0;color:#64748b;font-size:.9rem;line-height:1.6}
+.notification-item{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
+.notification-item.read{opacity:.7}
+.notification-item small{display:block;margin-top:5px;color:#94a3b8}
+.notification-empty{padding:24px;color:#64748b;text-align:center}
+@media(max-width:640px){.subscription-lock{padding:24px 16px}.subscription-lock-card{padding:32px 22px;border-radius:22px}.subscription-lock-actions{flex-direction:column}.subscription-lock-actions .button{width:100%}}
