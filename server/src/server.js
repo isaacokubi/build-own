@@ -25,6 +25,9 @@ import { requireHttpsInProduction } from './middleware/securityHeaders.js';
 import { requestContext } from './middleware/requestContext.js';
 import { observability } from './middleware/observability.js';
 import { isAllowedCorsOrigin } from './config/cors.js';
+import { requireAuth } from './middleware/auth.js';
+import { requireTenantSubscription } from './middleware/tenantAccess.js';
+import { startSubscriptionExpiryNotificationScheduler } from './utils/subscriptionNotifications.js';
 
 const app = express();
 const port = Number(process.env.PORT || 5000);
@@ -40,10 +43,7 @@ app.use(requireHttpsInProduction);
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (isAllowedCorsOrigin(origin)) {
-        return callback(null, true);
-      }
-
+      if (isAllowedCorsOrigin(origin)) return callback(null, true);
       const error = new Error(`CORS blocked origin: ${origin}`);
       error.status = 403;
       error.code = 'CORS_ORIGIN_DENIED';
@@ -76,18 +76,20 @@ app.get('/api/health', (_req, res) =>
   }),
 );
 app.use('/api/auth', authRoutes);
-app.use('/api/roles', roleRoutes);
 app.use('/api/tenants', tenantRoutes);
-app.use('/api/construction', constructionCoreRoutes);
-app.use('/api/finance', financeProcurementRoutes);
-app.use('/api/hr', hrRoutes);
-app.use('/api/payroll', payrollRoutes);
-app.use('/api/equipment', equipmentRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/procurement', procurementRoutes);
-app.use('/api/hr-payroll', hrPayrollRoutes);
-app.use('/api/safety-quality', safetyQualityRoutes);
-app.use('/api/documents-reporting', documentReportRoutes);
+
+const subscriptionProtected = [requireAuth, requireTenantSubscription];
+app.use('/api/roles', ...subscriptionProtected, roleRoutes);
+app.use('/api/construction', ...subscriptionProtected, constructionCoreRoutes);
+app.use('/api/finance', ...subscriptionProtected, financeProcurementRoutes);
+app.use('/api/hr', ...subscriptionProtected, hrRoutes);
+app.use('/api/payroll', ...subscriptionProtected, payrollRoutes);
+app.use('/api/equipment', ...subscriptionProtected, equipmentRoutes);
+app.use('/api/inventory', ...subscriptionProtected, inventoryRoutes);
+app.use('/api/procurement', ...subscriptionProtected, procurementRoutes);
+app.use('/api/hr-payroll', ...subscriptionProtected, hrPayrollRoutes);
+app.use('/api/safety-quality', ...subscriptionProtected, safetyQualityRoutes);
+app.use('/api/documents-reporting', ...subscriptionProtected, documentReportRoutes);
 app.use('/api/notifications-audit', notificationAuditRoutes);
 
 app.use((_req, res) =>
@@ -120,6 +122,7 @@ async function start() {
   }
 
   await mongoose.connect(process.env.MONGODB_URI);
+  startSubscriptionExpiryNotificationScheduler();
   app.listen(port, () => console.log(`Construction API listening on ${port}`));
 }
 
