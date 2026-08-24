@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Document, Report } from '../models/Document.js';
 import Project from '../models/Project.js';
 import { Expense, PurchaseOrder, Material } from '../models/FinanceProcurement.js';
@@ -19,50 +20,32 @@ export const documents = async (req, res, next) => {
   try {
     if (!guard(req, res)) return;
     res.json({ success: true, data: await Document.find(scoped(req)).sort({ createdAt: -1 }).lean() });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 export const createDocument = async (req, res, next) => {
   try {
     if (!guard(req, res)) return;
     const body = req.body || {};
-    if (!body.name || !body.url) {
-      return res.status(400).json({ success: false, message: 'Document name and URL are required', code: 'VALIDATION_ERROR' });
-    }
-    res.status(201).json({
-      success: true,
-      data: await Document.create({ ...body, tenantId: tid(req), uploadedBy: req.user.id }),
-    });
-  } catch (error) {
-    next(error);
-  }
+    if (!body.name || !body.url) return res.status(400).json({ success: false, message: 'Document name and URL are required', code: 'VALIDATION_ERROR' });
+    res.status(201).json({ success: true, data: await Document.create({ ...body, tenantId: tid(req), uploadedBy: req.user.id }) });
+  } catch (error) { next(error); }
 };
 
 export const reports = async (req, res, next) => {
   try {
     if (!guard(req, res)) return;
     res.json({ success: true, data: await Report.find(scoped(req)).sort({ createdAt: -1 }).lean() });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 export const createReport = async (req, res, next) => {
   try {
     if (!guard(req, res)) return;
     const body = req.body || {};
-    if (!body.type) {
-      return res.status(400).json({ success: false, message: 'Report type is required', code: 'VALIDATION_ERROR' });
-    }
-    res.status(201).json({
-      success: true,
-      data: await Report.create({ ...body, tenantId: tid(req), generatedBy: req.user.id }),
-    });
-  } catch (error) {
-    next(error);
-  }
+    if (!body.type) return res.status(400).json({ success: false, message: 'Report type is required', code: 'VALIDATION_ERROR' });
+    res.status(201).json({ success: true, data: await Report.create({ ...body, tenantId: tid(req), generatedBy: req.user.id }) });
+  } catch (error) { next(error); }
 };
 
 export const analyticsSummary = async (req, res, next) => {
@@ -70,51 +53,28 @@ export const analyticsSummary = async (req, res, next) => {
     if (!guard(req, res)) return;
 
     const tenantId = tid(req);
-    const [
-      projectStats,
-      projectStatuses,
-      expensesByCurrency,
-      purchaseOrders,
-      lowStockMaterials,
-      activeEmployees,
-      documentCount,
-      reportCount,
-    ] = await Promise.all([
+    const tenantObjectId = new mongoose.Types.ObjectId(tenantId);
+    const [projectStats, projectStatuses, expensesByCurrency, purchaseOrders, lowStockMaterials, activeEmployees, documentCount, reportCount] = await Promise.all([
       Project.aggregate([
-        { $match: { tenantId, isDeleted: { $ne: true } } },
-        {
-          $group: {
-            _id: null,
-            count: { $sum: 1 },
-            averageProgress: { $avg: '$progress' },
-            contractValue: { $sum: '$contractValue' },
-            budget: { $sum: '$budget' },
-          },
-        },
+        { $match: { tenantId: tenantObjectId, isDeleted: { $ne: true } } },
+        { $group: { _id: null, count: { $sum: 1 }, averageProgress: { $avg: '$progress' }, contractValue: { $sum: '$contractValue' }, budget: { $sum: '$budget' } } },
       ]),
       Project.aggregate([
-        { $match: { tenantId, isDeleted: { $ne: true } } },
+        { $match: { tenantId: tenantObjectId, isDeleted: { $ne: true } } },
         { $group: { _id: '$status', count: { $sum: 1 } } },
         { $sort: { count: -1, _id: 1 } },
       ]),
       Expense.aggregate([
-        { $match: { tenantId } },
+        { $match: { tenantId: tenantObjectId } },
         { $group: { _id: '$currency', total: { $sum: '$amount' }, count: { $sum: 1 } } },
         { $sort: { total: -1, _id: 1 } },
       ]),
       PurchaseOrder.aggregate([
-        { $match: { tenantId, status: { $ne: 'Cancelled' } } },
-        {
-          $group: {
-            _id: null,
-            count: { $sum: 1 },
-            committedValue: { $sum: '$totalAmount' },
-            pendingApproval: { $sum: { $cond: [{ $eq: ['$status', 'Pending Approval'] }, 1, 0] } },
-          },
-        },
+        { $match: { tenantId: tenantObjectId, status: { $ne: 'Cancelled' } } },
+        { $group: { _id: null, count: { $sum: 1 }, committedValue: { $sum: '$totalAmount' }, pendingApproval: { $sum: { $cond: [{ $eq: ['$status', 'Pending Approval'] }, 1, 0] } } } },
       ]),
-      Material.countDocuments({ tenantId, $expr: { $lt: ['$stock', '$minimumStock'] } }),
-      Employee.countDocuments({ tenantId, status: 'Active' }),
+      Material.countDocuments({ tenantId: tenantObjectId, $expr: { $lt: ['$stock', '$minimumStock'] } }),
+      Employee.countDocuments({ tenantId: tenantObjectId, status: 'Active' }),
       Document.countDocuments({ tenantId }),
       Report.countDocuments({ tenantId }),
     ]);
@@ -134,20 +94,12 @@ export const analyticsSummary = async (req, res, next) => {
           variance: (projects.budget || 0) - (projects.contractValue || 0),
           statuses: projectStatuses.map((item) => ({ status: item._id || 'Unknown', count: item.count })),
         },
-        finance: {
-          expensesByCurrency: expensesByCurrency.map((item) => ({ currency: item._id || 'N/A', total: item.total || 0, count: item.count })),
-        },
-        procurement: {
-          purchaseOrders: procurement.count || 0,
-          committedValue: procurement.committedValue || 0,
-          pendingApproval: procurement.pendingApproval || 0,
-        },
+        finance: { expensesByCurrency: expensesByCurrency.map((item) => ({ currency: item._id || 'N/A', total: item.total || 0, count: item.count })) },
+        procurement: { purchaseOrders: procurement.count || 0, committedValue: procurement.committedValue || 0, pendingApproval: procurement.pendingApproval || 0 },
         workforce: { activeEmployees },
         inventory: { lowStockMaterials },
         records: { documents: documentCount, reports: reportCount },
       },
     });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
