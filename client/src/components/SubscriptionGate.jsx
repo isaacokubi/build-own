@@ -1,23 +1,6 @@
-import {useEffect,useState} from 'react';
-import {tenantApi} from '../api';
 import './subscriptionGate.css';
 
-export default function SubscriptionGate({children}){
-  const [access,setAccess]=useState(null);
-  const [workspace,setWorkspace]=useState(null);
-  const authenticated=Boolean(localStorage.getItem('accessToken'));
-
-  useEffect(()=>{
-    let active=true;
-    if(!authenticated){setAccess(null);return undefined;}
-    tenantApi.me().then(response=>{
-      if(!active)return;
-      setWorkspace(response.data?.data||null);
-      setAccess(response.data?.access||null);
-    }).catch(()=>{});
-    return()=>{active=false};
-  },[authenticated]);
-
+export default function SubscriptionGate({children,access,workspace,authenticated}){
   if(!authenticated || !access || access.allowed!==false)return children;
 
   const suspended=access.reason==='TENANT_SUSPENDED';
