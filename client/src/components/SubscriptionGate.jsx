@@ -1,11 +1,10 @@
 import {useEffect,useState} from 'react';
-import {useNavigate} from 'react-router-dom';
 import {tenantApi} from '../api';
+import './subscriptionGate.css';
 
 export default function SubscriptionGate({children}){
   const [access,setAccess]=useState(null);
   const [workspace,setWorkspace]=useState(null);
-  const navigate=useNavigate();
   const authenticated=Boolean(localStorage.getItem('accessToken'));
 
   useEffect(()=>{
@@ -42,7 +41,7 @@ export default function SubscriptionGate({children}){
         {expiry&&<small>Previous access period ended: {expiry}</small>}
       </div>
       <div className="subscription-lock-actions">
-        <button className="button" onClick={()=>navigate('/admin')}>Open company administration</button>
+        <button className="button" onClick={()=>window.location.reload()}>Check access again</button>
         <button className="button secondary" onClick={()=>{localStorage.removeItem('accessToken');localStorage.removeItem('refreshToken');window.location.reload()}}>Sign out</button>
       </div>
       <p className="subscription-lock-footer">
